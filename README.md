@@ -49,13 +49,20 @@ Usage information output by the programm:
 ## Output File Format
 The output file is a simple ASCII file the file format is as follows:
 
-    # device_id      inode_number    Age_in_Seconds   Size_in_Bytes  Time           MB_per_Second
-           41          1930962           80049            1451      1.2390e-06      1.1169e+03
-        66305               28          119819        14150988      1.3628e-03      9.9029e+03
-Note: The first file is too small -- typical read speed on this system is ~2.5GB/s for large files. The high read speed (~10GB/s) of the second file was caused by cashing -- the file was on purpose read twice to demonstrate the effect.
+    # device_id      inode_number    Age_in_days      Size_in_MB    Time            MB_per_Second
+     00:1a            1836310             0.0             1.1      1.39e-04            8193.7
+     00:1a             424229            40.1             1.4      1.92e-03             742.9
+Note: Typical a read speed on this system is ~2.5GB/s to ~ ~3.5GB/s for large, recently created files. The first file shows artificially high read speed (~8GB/s) due to cashing effekts. The second file has a suspiciously low read speed. Since many files of similar age also showed up with read speed <1GB/s this is an indication for my SSD suffering from Read Rate Degeneration. 
+
+To identify the affected file you can use find like this:
+
+    $ find / -inum 424229 -exec ls -l {} \; 2>/dev/null
+    -rwxr-xr-x 1 root root 1495296 22. Aug 2020  /usr/bin/lftp
+
 
 ## Limitations 
-The file age is derived from the file's mtime (time when the file content was last modified). This time stamp can be changed,  e.g. files can be younger or display a negative age. A solution would be to use date of birth if mtime is older or discard these files . However this has not been implemented since I don't know an easy way to get date of birth: stat() does not provide this information and not all file systems provide this information.
+There is no reliable method to determine the **true** file age (= time of last write to the file). The mtime (time of last content modification) can be set to any time and this is typically done for installed software (e.g. stuff in /usr, see the example above with /usr/bin/lftp which was installed in 12/2022). These files may be younger as indicated by mtime. Most filesystems support btime (birthtime, time of file creation). If btime is younger than mtime, the program uses btime, otherwise mtime. This should solve the problem in **most** cases. However if mtime is set to some time in after the last write operation we are doomed. In such cases programm may even report negative file ages, since mtime can be set to the future. This is not a bug!  
+
 
 ## Grafical Display of the Results
 For graphical display gnuplot or a spreadsheet have to be used. Since read speed will vary for individual files plotting an average read speed versus file age (e.g. in steps of months) should give a reliable trend.

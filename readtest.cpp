@@ -4,6 +4,7 @@
 #include "defaults.h"
 #include "readtest.h"
 #include "timedread.h"
+#include "statx.h"
 
 // perform read speed test for all files > min_size
 
@@ -15,13 +16,8 @@ void perform_readtest(std::vector<std::string *> &filelist,
     for (std::string *fnam : filelist) {
 
         // get file status information, ignore too small files (min_size)
-        if (stat(fnam->c_str(), &stat_buf) || stat_buf.st_size < min_size)
-            continue;
-        sc.filename = fnam;                      // filename
-        sc.device_id = stat_buf.st_dev;          // ID of device containing file
-        sc.inode_num = stat_buf.st_ino;          // inode number
-        sc.size = stat_buf.st_size;              // file size in bytes
-        sc.age = time(NULL) - stat_buf.st_mtime; // file age in seconds
+        if (call_statx(fnam, sc) || sc.size < min_size)
+            continue; 
 
         // read file and measure time
         if (timedFileRead(fnam->c_str(), chunk_size, sc.t_elapsed) != sc.size) {

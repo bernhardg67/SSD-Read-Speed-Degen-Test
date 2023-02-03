@@ -1,12 +1,11 @@
-#include <vector>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 #include "defaults.h"
 #include "readtest.h"
 #include "writeresult.h"
-
 
 void write_results(std::vector<struct scorecard> &result_list) {
     // write results to file or stdout
@@ -29,20 +28,20 @@ void write_results(std::vector<struct scorecard> &result_list) {
     }
     std::ostream out(buf);
 
-    out << "# device_id\t inode_number\t Age_in_Seconds\t  Size_in_Bytes\t "
+    out << "# device_id\t inode_number\t Age_in_days\t  Size_in_MB\t"
            "Time \t\tMB_per_Second"
         << std::endl;
 
-    out << std::scientific;
-    out << std::setprecision(4);
-
+    out << std::right;
     for (struct scorecard sc : result_list) {
-        out << std::setw(10) << sc.device_id << "\t";
+        out << "  " << std::setfill('0') << std::setw(2) << std::hex;
+        out << sc.dev_major << ":" << sc.dev_minor << "\t\t";
+        out << std::setfill(' ') << std::dec;
         out << std::setw(10) << sc.inode_num << "\t";
-        out << std::setw(10) << sc.age << "\t";
-        out << std::setw(10) << sc.size << "\t";
-        out << sc.t_elapsed << "\t";
-        out << sc.mb_per_sec << std::endl;
+        out << std::setw(10) << std::fixed << std::setprecision(1) << sc.age / (3600*24) << "\t";
+        out << std::setw(10) << std::fixed << std::setprecision(1)<< (double) sc.size / (1 << 20) << "\t";
+        out << std::setw(7) << std::scientific << std::setprecision(2) << sc.t_elapsed << "\t";
+        out << std::setw(10) << std::fixed << std::setprecision(1)  << sc.mb_per_sec << std::endl;
     }
 
     if (of.is_open())
