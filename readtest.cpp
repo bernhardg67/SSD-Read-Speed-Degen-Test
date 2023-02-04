@@ -11,7 +11,6 @@
 void perform_readtest(std::vector<std::string *> &filelist,
                       std::vector<struct scorecard> &result_list) {
     struct scorecard sc;
-    struct stat stat_buf;
 
     for (std::string *fnam : filelist) {
 
@@ -20,7 +19,7 @@ void perform_readtest(std::vector<std::string *> &filelist,
             continue; 
 
         // read file and measure time
-        if (timedFileRead(fnam->c_str(), chunk_size, sc.t_elapsed) != sc.size) {
+        if (timedFileRead(fnam->c_str(), chunk_size, sc.t_elapsed) != (ssize_t)sc.size) {
             std::cerr << " failed reading " << *fnam << std::endl;
             continue;
         }

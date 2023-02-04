@@ -13,7 +13,7 @@ struct scorecard {
     dev_t dev_major;       // ID major of device
     dev_t dev_minor;       // ID minor of device containing file
     ino_t inode_num;       // inode number
-    ssize_t size;          // file size in byts
+    size_t size;           // file size in byts
     double age;            // age in seconds (last modified or created)
     double t_elapsed;      // time to read file
     double mb_per_sec;     // read speed rate in MB/s

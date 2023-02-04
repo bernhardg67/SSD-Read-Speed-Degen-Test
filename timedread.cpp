@@ -32,7 +32,7 @@ ssize_t timedFileRead(const char *fnam, size_t chunksize, double &t_elapsed) {
     clock_gettime(CLOCK_MONOTONIC_RAW, &t_start);
     do {
         nread += (nr = read(fd, buf, chunksize));
-    } while (nr == chunksize);
+    } while (nr == (ssize_t) chunksize);
     clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
 
     // elapsed time in seconds
@@ -40,7 +40,7 @@ ssize_t timedFileRead(const char *fnam, size_t chunksize, double &t_elapsed) {
                 (t_end.tv_nsec - t_start.tv_nsec) * 1e-9;
 
     // free memory for buffer
-    delete buf;
+    delete[] buf;
 
     // close or last read could have failed (-1)
     // success: total number of bytes read

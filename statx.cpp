@@ -35,7 +35,7 @@ int call_statx(std::string *fnam, struct scorecard &sc) {
         return -1; // statx failed
 
     sc.filename = fnam;
-    sc.size = (stx.stx_mask & STATX_SIZE) ? sc.size = stx.stx_size : 0;
+    sc.size = (stx.stx_mask & STATX_SIZE) ? stx.stx_size : 0;
     sc.inode_num = (stx.stx_mask & STATX_INO) ? stx.stx_ino : 0;
     sc.dev_major = stx.stx_dev_major;
     sc.dev_minor = stx.stx_dev_minor;
