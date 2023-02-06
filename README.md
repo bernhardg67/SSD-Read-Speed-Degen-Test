@@ -30,8 +30,8 @@ Run the build script in the source directory:
     ./build.sh
 This will place the executable **degentest** in the project directory.
 
-## Runnig the programs
-Usage information output by the program:
+## Runnig the degentest
+Usage information output by the degentest:
 
     $ ./degentest --help
     degentest [options]
@@ -50,6 +50,15 @@ Usage information output by the program:
     degentest-v -p / -p /home  -m 1M -o res.dat -f "-xdev -type f -maxdepth 1"
     scan directory tree / and /home, test only file  >1MB, write output to res.dat
     call find with options "-xdev -type f -maxdepth 1"
+
+## Example
+Suppose our Linux installation has three separate file systems mounted as /, /home and /media. We want to scan all files greater then 1MB and write the output to readspeed.dat:
+
+    $ ./degentest -p / -p /home -p /media -m 1M -o readspeed.dat
+Now we want to plot the results:
+
+    $ ./plotspeedtest.py readspeed.dat
+If we call plotspeedtest.py without filename a file picker lets us select the file we want to plot.
 
 ## Output File Format
 The output file is a simple ASCII file the file format is as follows:
