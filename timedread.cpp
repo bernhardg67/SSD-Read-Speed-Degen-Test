@@ -3,7 +3,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "timedread.h"
+#include "degentest.h"
 
 // read file in chunks of buffer size using low level i/o
 // fnam: path name of file to read
@@ -15,6 +15,8 @@ ssize_t timedFileRead(const char *fnam, size_t chunksize, double &t_elapsed) {
     ssize_t nread = 0;
     ssize_t nr;
     struct timespec t_start, t_end;
+    
+    t_elapsed = 0.0; // initialize consistently, in case read fails
 
     // open file for reading (low level i/o)
     int fd = open(fnam, O_RDONLY);

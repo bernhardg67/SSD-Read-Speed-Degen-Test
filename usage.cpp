@@ -1,6 +1,5 @@
-#include <string>
 #include <iostream>
-#include "usage.h"
+#include "degentest.h"
 
 // print usage information
 void usage(std::string prgname)

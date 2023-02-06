@@ -9,9 +9,9 @@
 #include <unistd.h>
 
 #include "defaults.h"
-#include "parsopt.h"
-#include "usage.h"
+#include "degentest.h"
 #include "version.h"
+
 
 // long options
 static struct option long_options[] = {{"brief", no_argument, 0, 'b'},

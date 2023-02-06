@@ -1,38 +1,67 @@
-#include <algorithm>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 
-#include "defaults.h"
-#include "readtest.h"
-#include "timedread.h"
-#include "statx.h"
+#include "degentest.h"
 
-// perform read speed test for all files > min_size
+void perform_readtest(std::vector<struct scorecard> &filelist,
+                      std::string outfnam, size_t chunk_size, bool verbose) {
 
-void perform_readtest(std::vector<std::string *> &filelist,
-                      std::vector<struct scorecard> &result_list) {
-    struct scorecard sc;
+    // write results to file or stdout
+    std::ofstream of;
+    std::streambuf *buf;
+    if (outfnam == "") {
+        // no output file given, write to stdout
+        buf = std::cout.rdbuf();
+    } else {
+        // write to file
+        if (verbose)
+            std::cout << "Writing output to " << outfnam << std::endl;
+        of.open(outfnam);
+        if (!of.is_open()) {
+            std::cerr << "Can't write results to file " << outfnam << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        buf = of.rdbuf();
+    }
+    std::ostream out(buf);
 
-    for (std::string *fnam : filelist) {
+    out << "# Age[day]\t  Size[MB]\tTime[s]\tSpeed[MB/s]\t\tFilename"
+        << std::endl;
 
-        // get file status information, ignore too small files (min_size)
-        if (call_statx(fnam, sc) || sc.size < min_size)
-            continue; 
+    // loop through all files, read them and output results
+    for (unsigned long i = 0; i < filelist.size(); ++i) {
+        struct scorecard &sc = filelist[i];
 
         // read file and measure time
-        if (timedFileRead(fnam->c_str(), chunk_size, sc.t_elapsed) != (ssize_t)sc.size) {
-            std::cerr << " failed reading " << *fnam << std::endl;
+        if (timedFileRead(sc.filename->c_str(), chunk_size, sc.t_elapsed) !=
+            (ssize_t)sc.size) {
+            // read error: set read speed to zero and skip output
+            sc.mb_per_sec = 0.0;
+            std::cerr << " failed reading " << *sc.filename << std::endl;
             continue;
         }
         sc.mb_per_sec =
-            sc.t_elapsed ? sc.size / ((1 << 20) * sc.t_elapsed) : -1.0;
-        result_list.push_back(sc); // store result in list
+            sc.t_elapsed ? sc.size / ((1 << 20) * sc.t_elapsed) : 0.0;
+
+        // Write results to output
+        out << std::right;
+
+        // out << "  " << std::setfill('0') << std::setw(2) << std::hex;
+        // out << sc.dev_major << ":" << sc.dev_minor << "\t\t";
+        // out << std::setfill(' ') << std::dec;
+        // out << std::setw(10) << sc.inode << "\t";
+        out << std::setw(10) << std::fixed << std::setprecision(1)
+            << sc.age / (3600 * 24) << "\t";
+        out << std::setw(10) << std::fixed << std::setprecision(1)
+            << (double)sc.size / (1 << 20) << "\t";
+        out << std::setw(12) << std::scientific << std::setprecision(2)
+            << sc.t_elapsed << "\t";
+        out << std::setw(10) << std::fixed << std::right << std::setprecision(1)
+            << sc.mb_per_sec << "\t\t";
+        out << *sc.filename << std::endl;
     }
 
-    // sort list by age joung -> old
-    std::sort(
-        result_list.begin(), result_list.end(),
-        [](struct scorecard &a, struct scorecard &b) { return a.age < b.age; });
-
-    if (verbose_flag)
-        std::cout << "Files read/reported: " << result_list.size() << std::endl;
+    if (of.is_open())
+        of.close();
 }

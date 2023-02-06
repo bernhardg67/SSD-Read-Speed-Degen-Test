@@ -1,21 +1,25 @@
-#include "statx.h"
+#include "degentest.h"
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 
 #include <ctype.h>
-#include <errno.h>
+#include <linux/fcntl.h>
+#include <linux/stat.h>
 #include <linux/fcntl.h>
 #include <linux/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+
+
 
 // convert statx_timestamp to seconds elapsed
 double ts2sec_el(struct statx_timestamp t_stamp) {
@@ -26,19 +30,20 @@ double ts2sec_el(struct statx_timestamp t_stamp) {
 }
 
 // get statx information about file
-int call_statx(std::string *fnam, struct scorecard &sc) {
+int call_statx(const char *fnam, dev_t &dev_major, dev_t &dev_minor, ino_t &inode,
+               size_t &size, double &age) {
     struct statx stx;
 
     memset(&stx, 0xbf, sizeof(stx));
-    if (statx(AT_FDCWD, fnam->c_str(), AT_SYMLINK_NOFOLLOW,
+    if (statx(AT_FDCWD, fnam, AT_SYMLINK_NOFOLLOW,
               STATX_BASIC_STATS | STATX_BTIME, &stx) < 0)
         return -1; // statx failed
 
-    sc.filename = fnam;
-    sc.size = (stx.stx_mask & STATX_SIZE) ? stx.stx_size : 0;
-    sc.inode_num = (stx.stx_mask & STATX_INO) ? stx.stx_ino : 0;
-    sc.dev_major = stx.stx_dev_major;
-    sc.dev_minor = stx.stx_dev_minor;
+    
+    size = (stx.stx_mask & STATX_SIZE) ? stx.stx_size : 0;
+    inode = (stx.stx_mask & STATX_INO) ? stx.stx_ino : 0;
+    dev_major = stx.stx_dev_major;
+    dev_minor = stx.stx_dev_minor;
 
     // calculate file age (= last write operation)
     // mtime can differ from last write to file
@@ -52,7 +57,7 @@ int call_statx(std::string *fnam, struct scorecard &sc) {
         (stx.stx_mask & STATX_MTIME) ? ts2sec_el(stx.stx_mtime) : -1.;
     double b_elapsed =
         (stx.stx_mask & STATX_BTIME) ? ts2sec_el(stx.stx_btime) : -1.;
-    sc.age = (b_elapsed < m_elapsed) ? b_elapsed : m_elapsed;
+    age = (b_elapsed < m_elapsed) ? b_elapsed : m_elapsed;
 
     return 0;
 }
