@@ -1,11 +1,44 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/resource.h>
+
+
 
 #include "degentest.h"
 
+// If run as root: sync and drop cache, set maximum priority
+void dropcache(bool verbose) {
+
+    // set maximum priority (-20)
+    if (setpriority(PRIO_PROCESS, getpid(), -20))
+        std::cout << "Faild setting maximum priority. Proceeding with normal "
+                     "priority."
+                  << std::endl;
+
+    if (verbose)
+        std::cout << "Syncing and dropping cashes. May cause system freeze "
+                     "for a few seconds."
+                  << std::endl;
+    int result =
+        system("(sync && echo 3 > /proc/sys/vm/drop_caches) 2>/dev/null");
+    if (!result && verbose)
+        std::cout << "Done." << std::endl;
+    else if (result)
+        std::cout << "Warning! Dopping cache failed. Procseeding with "
+                     "non-empty cache."
+                  << std::endl;
+}
+
 void perform_readtest(std::vector<struct scorecard> &filelist,
-                      std::string outfnam, size_t chunk_size, bool verbose) {
+                      std::string outfnam, size_t chunk_size, bool rootpriv,
+                      bool verbose) {
+
+    // drop cache and set maximum priority
+    if (rootpriv)
+        dropcache(verbose);
 
     // write results to file or stdout
     std::ofstream of;

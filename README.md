@@ -71,14 +71,16 @@ Note: Typical a read speed on this system is ~2.5GB/s to ~ ~3.5GB/s for large, r
 
 
 ## Limitations 
-There is no reliable method to determine the **true** file age (= time of last write to the file). The mtime (time of last content modification) can be set to any time and this is typically done for installed software (e.g. stuff in /usr, see the example above with /usr/bin/lftp which was installed in 12/2022). These files may be younger as indicated by mtime. Most filesystems support btime (birthtime, time of file creation). If btime is younger than mtime, the program uses btime, otherwise mtime. This should solve the problem in **most** cases. However if mtime is set to some time in after the last write operation we are doomed. 
+There is no reliable method to determine the **true** file age (= time of last write to the file). The mtime (time of last content modification) can be set to any time and this is typically done for installed software (e.g. stuff in /usr, see the example above with /usr/bin/lftp which was installed in 12/2022). These files may be younger as indicated by mtime. Most filesystems support btime (birthtime, time of file creation). If btime is younger than mtime, the program uses btime, otherwise mtime. This should solve the problem in **most** cases. However if mtime is set to some time in after the last write operation we are doomed (this should rarely be the case). 
 
+## Root Privileges
+degentest is best run with root privileges (e.g. sudo). It will then switch to maximum priority (-20) and drop all file system caches to minimize effects of caching and competing processes. This is only possible with root privileges. 
 
 ## Grafical Display of the Results
 For graphical display a python script is provided. Since read speed will vary for individual files plotting an average read speed versus file age (e.g. in steps of months) should give a reliable trend. The plot constist of a scatter plot of the read speed of individual files and an averaged trend. 
 
 ## Interpreting the results
-Variations of read speeds are to be exspected in a multitasking environment. File caching can cause unrealistic high read speeds for some files. Concurring processes can cause low read speeds -- test on a idle system or from a live system. If the average read speed drops with increasing file age a read speed degeneration is likely.
+Variations of read speeds are to be exspected in a multitasking environment. File caching can cause unrealistic high read speeds for some files. Competing processes can cause low read speeds -- test on a idle system or from a live system. If the average read speed drops with increasing file age a read speed degeneration is likely.
 
 ## Fixing the Read Speed Degeneration
 If a firmware update is not provide by the manufacturer re-writing old files on a regular basis has to be performed by the user. This is out of the scope of this program.
